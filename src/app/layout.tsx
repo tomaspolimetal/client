@@ -7,6 +7,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import SidebarNav from "@/components/SidebarNav";
 import { Toaster } from "@/components/ui/toaster";
 import { SocketProvider } from "../context/SocketProvider";
+import { CacheProvider } from "../context/CacheProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,14 +35,16 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       > 
         <SocketProvider>
-        <SidebarProvider>
-        <div className="flex h-screen w-full">
-        {/* Sidebar */}
-        <SidebarNav />
-        {children}
-        <Toaster />
-        </div>
-        </SidebarProvider>
+          <CacheProvider>
+            <SidebarProvider>
+              <div className="flex h-screen w-full">
+                {/* Sidebar */}
+                <SidebarNav />
+                {children}
+                <Toaster />
+              </div>
+            </SidebarProvider>
+          </CacheProvider>
         </SocketProvider>
       </body>
     </html>

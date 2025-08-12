@@ -1,7 +1,6 @@
 "use client";
 import React, { Suspense, useEffect, useState } from "react";
-import { useSocketData } from "@/hooks/useSocketData";
-import { useSocket } from "@/context/SocketProvider";
+import { useCachedSocketData } from "@/context/CacheProvider";
 import config from "@/config/config";
 import { CreateClienteDrawer } from "@/components/CreateClienteDrawer";
 import { TicketDrawer } from "@/components/ui/TicketDrawerClient";
@@ -66,6 +65,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar"
 import { addDays } from "date-fns"
 import { EditClienteDrawer } from "@/components/EditClienteDrawer";
+import { CacheIndicator } from "@/components/CacheIndicator";
 
 interface Cliente {
   id: string;
@@ -86,12 +86,8 @@ type SortField = keyof Cliente;
 
 export default function Cliente() {  
   const router = useRouter();
-  const { socket } = useSocket();
-  const { status, clientes: initialClientes } = useSocketData();
-  const [clientes, setClientes] = useState<Cliente[]>(() => (initialClientes || []).map(cliente => ({
-    ...cliente,
-    remito: cliente.remito?.toString() ?? ''
-  })));
+  const { status, clientes: cachedClientes, socket } = useCachedSocketData();
+  const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editDrawerOpen, setEditDrawerOpen] = useState(false);
@@ -119,6 +115,15 @@ export default function Cliente() {
     }
   }, []);
 
+  // Sincronizar clientes del caché con el estado local
+  useEffect(() => {
+    const transformedClientes = (cachedClientes || []).map(cliente => ({
+      ...cliente,
+      remito: cliente.remito?.toString() ?? ''
+    }));
+    setClientes(transformedClientes);
+  }, [cachedClientes]);
+
   useEffect(() => {
     localStorage.setItem('clienteMaterialItemsPerPage', itemsPerPage.toString());
   }, [itemsPerPage]);
@@ -140,17 +145,7 @@ export default function Cliente() {
     };
   }, [socket]);
 
-  useEffect(() => {
-    // Solo transformar si initialClientes existe y tiene datos
-    if (initialClientes && initialClientes.length > 0) {
-      setClientes(initialClientes.map(cliente => ({
-        ...cliente,
-        remito: cliente.remito?.toString() ?? ''
-      })));
-    } else {
-      setClientes([]);
-    }
-  }, [initialClientes]);
+
 
   const handleSort = (field: keyof Cliente) => {
     if (sortField === field) {
@@ -277,6 +272,7 @@ export default function Cliente() {
             </form>
           </div>
           <div className="ml-auto flex items-center gap-2">
+            <CacheIndicator />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">

@@ -1,6 +1,6 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo } from "react";
-import { useSocket } from "../context/SocketProvider";
+import { useState, useMemo } from "react";
+import { useCachedSocketData } from "../context/CacheProvider";
 import {
   Sidebar,
   SidebarContent,
@@ -49,6 +49,7 @@ import {
 import { BarChart3, Bell, CreditCard, Layers, LayoutDashboard, Search, Settings, ShoppingCart, Tag, User, Users } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { CacheIndicator } from "./CacheIndicator";
 
 interface Maquina {
   id: string;
@@ -69,30 +70,9 @@ interface Recorte {
   fecha_actualizacion: string;
 }
 
-function useRecortesSocket() {
-  const { socket } = useSocket();
-  const [status, setStatus] = useState("🔴");
-  const [recortes, setRecortes] = useState<Recorte[]>([]);
+function useDashboardData() {
+  const { status, recortes } = useCachedSocketData();
   const [searchQuery, setSearchQuery] = useState("");
-
-  useEffect(() => {
-    if (!socket) return;
-    // Manejadores de conexión
-    socket.on("connect", () => setStatus("🟢"));
-    socket.on("disconnect", () => setStatus("🔴"));
-    // Manejadores de datos
-    socket.on("initialRecortes", (data: Recorte[]) => setRecortes(data));
-    socket.on("newRecorte", (recorte: Recorte) => setRecortes((prev) => [recorte, ...prev]));
-    socket.on("recorteDeleted", (data: { id: string }) => setRecortes((prev) => prev.filter((recorte) => recorte.id !== data.id)));
-    // Limpieza al desmontar
-    return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-      socket.off("initialRecortes");
-      socket.off("newRecorte");
-      socket.off("recorteDeleted");
-    };
-  }, [socket]);
 
   // Memoizar resultados filtrados
   const filteredRecortes = useMemo(() => {
@@ -107,7 +87,7 @@ function useRecortesSocket() {
 }
 
 export default function Dashboard() {
-  const { status, filteredRecortes, searchQuery, setSearchQuery } = useRecortesSocket();
+  const { status, filteredRecortes, searchQuery, setSearchQuery } = useDashboardData();
 
   return (
          <div className="flex flex-col flex-1 overflow-hidden">
@@ -128,6 +108,7 @@ export default function Dashboard() {
               </form>
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <CacheIndicator />
               <Button variant="ghost" size="icon">
                 <Bell className="h-4 w-4" />
                 <span className="sr-only">Notificaciones</span>

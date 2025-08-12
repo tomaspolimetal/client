@@ -4,7 +4,13 @@
   "description": "Aplicación web para gestión de recortes de materiales",
   "private": true,
   "author": "Tu Nombre",
-  "keywords": ["nextjs", "typescript", "tailwindcss", "socket.io", "recortes"],
+  "keywords": [
+    "nextjs",
+    "typescript",
+    "tailwindcss",
+    "socket.io",
+    "recortes"
+  ],
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",

@@ -1,7 +1,7 @@
 "use client";
 import React, { Suspense } from "react";
 import { useState, useEffect } from "react";
-import { useSocketData } from "@/hooks/useSocketData";
+import { useCachedSocketData } from "@/context/CacheProvider";
 import config from "@/config/config";
 import { getImageSrc } from "@/utils/imageUtils";
 import { TicketDrawer } from "@/components/ui/TicketDrawer";
@@ -45,7 +45,7 @@ import { CircularProgress } from "@/components/ui/CircularProgress";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useSocket } from "@/context/SocketProvider";
+import { CacheIndicator } from "@/components/CacheIndicator";
 
 interface Maquina {
   id: string;
@@ -69,8 +69,7 @@ interface Recorte {
 
 export default function Recortes() {  
   const router = useRouter();
-  const { socket } = useSocket();
-  const { status, recortes, maquinas, setRecorteUpdateCallback } = useSocketData();
+  const { status, recortes, maquinas, socket } = useCachedSocketData();
   const [searchQuery, setSearchQuery] = useState("");
   const [estadoFilter, setEstadoFilter] = useState("todos");
   const [espesorFilter, setEspesorFilter] = useState("");
@@ -88,22 +87,7 @@ export default function Recortes() {
     }
   }, [maquinas, activeTab]);
 
-  // Configurar el callback para las actualizaciones de recortes
-  useEffect(() => {
-    setRecorteUpdateCallback((recorte: Recorte) => {
-      // Si el recorte y el recorte seleccionado no son null, entonces verificar el id
-      if (selectedRecorte && recorte && recorte.id === selectedRecorte.id) {
-        setDrawerOpen(false);
-        setEditDrawerOpen(false);
-        alert('Recorte actualizado exitosamente');
-      }
-    });
-
-    // Limpiar el callback al desmontar
-    return () => {
-      setRecorteUpdateCallback(null);
-    };
-  }, [setRecorteUpdateCallback, selectedRecorte]);
+  // Los datos se actualizan automáticamente a través del sistema de caché y sockets
 
   const handleRecorteClick = (recorte: Recorte) => {
     setSelectedRecorte(recorte);
@@ -230,6 +214,7 @@ export default function Recortes() {
               
             </div>
             <div className="ml-auto flex items-center gap-2">
+              <CacheIndicator />
               <Button variant="ghost" size="icon">
                 <Bell className="h-4 w-4" />
                 <span className="sr-only">Notificaciones</span>

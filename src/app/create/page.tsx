@@ -1,6 +1,6 @@
 'use client'
 import { useState, FormEvent, useEffect } from 'react';
-import { useSocket } from "../../context/SocketProvider";
+import { useCachedSocketData } from "../../context/CacheProvider";
 import config from "@/config/config";
 
 interface Maquina {
@@ -17,8 +17,7 @@ interface Recorte {
 }
 
 export default function Create() {
-  const [status, setStatus] = useState("🔴 Desconectado");
-  const [maquinas, setMaquinas] = useState<Array<{ id: string; nombre: string }>>([]);
+  const { status, maquinas, socket, isConnected } = useCachedSocketData();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
   // Estado para el formulario de máquina
@@ -36,30 +35,7 @@ export default function Create() {
     imagen: null
   });
 
-  const { socket } = useSocket();
-
-  // Efecto para manejar la conexión del socket y cargar máquinas
-  useEffect(() => {
-    if (!socket) return;
-    
-    socket.on("connect", () => {
-      setStatus("🟢 Conectado");
-      // Cargar lista de máquinas al conectar
-      fetch(`${config.API_BASE_URL}/api/maquinas`)
-        .then(res => res.json())
-        .then(data => setMaquinas(data))
-        .catch(err => console.error('Error cargando máquinas:', err));
-    });
-
-    socket.on("disconnect", () => {
-      setStatus("🔴 Desconectado");
-    });
-
-    return () => {
-      socket.off("connect");
-      socket.off("disconnect");
-    };
-  }, [socket]);
+  // Las máquinas se cargan automáticamente a través del sistema de caché
 
   // Manejador para crear máquina
   const handleMaquinaSubmit = async (e: FormEvent) => {
