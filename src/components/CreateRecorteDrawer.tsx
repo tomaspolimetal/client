@@ -78,6 +78,13 @@ export function CreateRecorteDrawer({ maquinas, onRecorteCreated }: CreateRecort
       }
       
       console.log("Enviando solicitud POST a:", `${API_URL}/api/recortes`);
+      
+      // Verificar el tamaño del archivo antes de enviar
+      if (recorte.imagen && recorte.imagen.size > 10 * 1024 * 1024) { // 10MB limit
+        alert("La imagen es demasiado grande. El tamaño máximo permitido es 10MB.");
+        return;
+      }
+      
       const response = await fetch(`${API_URL}/api/recortes`, {
         method: 'POST',
         body: formData,
@@ -111,7 +118,15 @@ export function CreateRecorteDrawer({ maquinas, onRecorteCreated }: CreateRecort
       } else {
         const errorData = await response.text();
         console.error("Error en la respuesta:", errorData);
-        throw new Error(`Error: ${response.status} - ${errorData}`);
+        
+        // Manejar errores específicos
+        if (response.status === 413) {
+          throw new Error("El archivo es demasiado grande. Intente con una imagen más pequeña.");
+        } else if (response.status === 500) {
+          throw new Error("Error del servidor. El backend no está configurado correctamente para manejar archivos. Contacte al administrador.");
+        } else {
+          throw new Error(`Error: ${response.status} - ${errorData}`);
+        }
       }
     } catch (error) {
       console.error('Error creando recorte:', error);
