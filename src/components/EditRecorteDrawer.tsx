@@ -1,6 +1,7 @@
 'use client'
 import { useState, FormEvent, useEffect } from 'react';
 import config from '@/config/config';
+import { getImageSrc } from '@/utils/imageUtils';
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "./ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -48,12 +49,12 @@ function RecorteForm({
   className?: string;
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(
-    selectedRecorte.imagen ? `${config.API_BASE_URL}${selectedRecorte.imagen}` : null
+    getImageSrc(selectedRecorte.imagen, config.API_BASE_URL)
   );
 
   useEffect(() => {
     if (selectedRecorte.imagen) {
-      setPreviewUrl(`${config.API_BASE_URL}${selectedRecorte.imagen}`);
+      setPreviewUrl(getImageSrc(selectedRecorte.imagen, config.API_BASE_URL));
     }
   }, [selectedRecorte]);
 

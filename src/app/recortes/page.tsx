@@ -3,6 +3,7 @@ import React, { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useSocketData } from "@/hooks/useSocketData";
 import config from "@/config/config";
+import { getImageSrc } from "@/utils/imageUtils";
 import { TicketDrawer } from "@/components/ui/TicketDrawer";
 import { CreateRecorteDrawer } from "@/components/CreateRecorteDrawer";
 import { EditRecorteDrawer } from "@/components/EditRecorteDrawer";
@@ -443,7 +444,7 @@ export default function Recortes() {
                         {recorte.imagen ? (
                           <div className="relative w-12 h-12">
                             <img
-                              src={`${config.API_BASE_URL}${recorte.imagen}`}
+                              src={getImageSrc(recorte.imagen, config.API_BASE_URL) || ''}
                               alt={`Recorte ${recorte.id}`}
                               className="w-full h-full object-cover rounded-md"
                             />

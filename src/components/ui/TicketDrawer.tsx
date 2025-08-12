@@ -2,6 +2,7 @@
 import * as React from "react"
 import config from '@/config/config'
 import { cn } from "@/lib/utils"
+import { getImageSrc } from '@/utils/imageUtils'
 import { useMediaQuery } from "@/hooks/use-media-query"
 import { Button } from "@/components/ui/button"
 import {
@@ -80,7 +81,7 @@ function RecorteForm({
           <Label>Imagen del Recorte</Label>
           <div className="relative w-full h-[200px] bg-gray-100 rounded-lg overflow-hidden">
             <img
-              src={`${config.API_BASE_URL}${selectedRecorte.imagen}`}
+              src={getImageSrc(selectedRecorte.imagen, config.API_BASE_URL) || ''}
               alt={`Recorte ${selectedRecorte.id}`}
               className="w-full h-full object-contain"
             />
