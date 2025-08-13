@@ -26,8 +26,12 @@ export default function SidebarNav() {
   return (
     <Sidebar>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-4 py-2">
-          <span className="text-lg font-bold">Mi Empresa</span>
+        <div className="flex items-center justify-center px-4 py-4">
+          <img 
+            src="https://gapp-oil.com.ar/wp-content/uploads/2022/03/logo-polimetal-1.png" 
+            alt="Polimetal Logo" 
+            className="h-12 w-auto"
+          />
         </div>
       </SidebarHeader>
       <SidebarContent>
