@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Maquina {
   id: string;
@@ -190,6 +191,7 @@ export function EditRecorteDrawer({
   maquinas = [],
   onRecorteUpdated 
 }: EditRecorteDrawerProps) {
+  const { toast } = useToast();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   // Si no hay recorte seleccionado, no mostrar nada
@@ -214,7 +216,11 @@ export function EditRecorteDrawer({
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al actualizar el recorte');
+      toast({
+        title: "Error",
+        description: "Error al actualizar el recorte",
+        variant: "destructive"
+      });
     }
   };
 

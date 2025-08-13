@@ -4,6 +4,7 @@ import { SideDrawer, SideDrawerContent, SideDrawerHeader, SideDrawerTitle } from
 import { Button } from "./ui/button";
 import { Plus } from "lucide-react";
 import config from '@/config/config';
+import { useToast } from "@/components/ui/use-toast";
 
 interface Maquina {
   id: string;
@@ -26,6 +27,7 @@ interface CreateRecorteDrawerProps {
 }
 
 export function CreateRecorteDrawer({ maquinas, onRecorteCreated }: CreateRecorteDrawerProps) {
+  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
@@ -55,7 +57,11 @@ export function CreateRecorteDrawer({ maquinas, onRecorteCreated }: CreateRecort
     try {
       // Validaciones básicas
       if (!recorte.largo || !recorte.ancho || !recorte.espesor || !recorte.cantidad || !recorte.maquinaId) {
-        alert("Por favor complete todos los campos obligatorios.");
+        toast({
+          title: "Campos incompletos",
+          description: "Por favor complete todos los campos obligatorios.",
+          variant: "destructive"
+        });
         return;
       }
       
@@ -81,7 +87,11 @@ export function CreateRecorteDrawer({ maquinas, onRecorteCreated }: CreateRecort
       
       // Verificar el tamaño del archivo antes de enviar
       if (recorte.imagen && recorte.imagen.size > 10 * 1024 * 1024) { // 10MB limit
-        alert("La imagen es demasiado grande. El tamaño máximo permitido es 10MB.");
+        toast({
+          title: "Archivo muy grande",
+          description: "La imagen es demasiado grande. El tamaño máximo permitido es 10MB.",
+          variant: "destructive"
+        });
         return;
       }
       
@@ -114,7 +124,10 @@ export function CreateRecorteDrawer({ maquinas, onRecorteCreated }: CreateRecort
           onRecorteCreated();
         }
         
-        alert("Recorte creado exitosamente");
+        toast({
+          title: "Éxito",
+          description: "Recorte creado exitosamente"
+        });
       } else {
         const errorData = await response.text();
         console.error("Error en la respuesta:", errorData);
@@ -130,7 +143,11 @@ export function CreateRecorteDrawer({ maquinas, onRecorteCreated }: CreateRecort
       }
     } catch (error) {
       console.error('Error creando recorte:', error);
-      alert(`Error al crear el recorte: ${error instanceof Error ? error.message : 'Desconocido'}`);
+      toast({
+        title: "Error",
+        description: `Error al crear el recorte: ${error instanceof Error ? error.message : 'Desconocido'}`,
+        variant: "destructive"
+      });
     }
   };
 

@@ -66,6 +66,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { addDays } from "date-fns"
 import { EditClienteDrawer } from "@/components/EditClienteDrawer";
 import { CacheIndicator } from "@/components/CacheIndicator";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Cliente {
   id: string;
@@ -86,6 +87,7 @@ type SortField = keyof Cliente;
 
 export default function Cliente() {  
   const router = useRouter();
+  const { toast } = useToast();
   const { status, clientes: cachedClientes, socket } = useCachedSocketData();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -171,7 +173,8 @@ export default function Cliente() {
 
   const handleDeleteClick = async (e: React.MouseEvent, cliente: Cliente) => {
     e.stopPropagation(); // Prevent opening the use drawer
-    if (window.confirm('¿Estás seguro de que quieres eliminar este material?')) {
+    const confirmed = window.confirm('¿Estás seguro de que quieres eliminar este material?');
+    if (confirmed) {
       try {
         const response = await fetch(`${config.API_BASE_URL}/api/clientes/${cliente.id}`, {
           method: 'DELETE',
@@ -184,7 +187,11 @@ export default function Cliente() {
         if (socket) socket.emit('getClientes'); // Solicitar actualización
       } catch (error) {
         console.error('Error:', error);
-        alert('Error al eliminar el material');
+        toast({
+          title: "Error",
+          description: "Error al eliminar el material",
+          variant: "destructive"
+        });
       }
     }
   };
@@ -206,7 +213,11 @@ export default function Cliente() {
       setDrawerOpen(false);
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al actualizar el material');
+      toast({
+        title: "Error",
+        description: "Error al actualizar el material",
+        variant: "destructive"
+      });
     }
   };
 

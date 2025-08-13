@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useMediaQuery } from "@/hooks/use-media-query";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Cliente {
   id: string;
@@ -152,6 +153,7 @@ export function EditClienteDrawer({
   selectedCliente, 
   onClienteUpdated 
 }: EditClienteDrawerProps) {
+  const { toast } = useToast();
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const handleSubmit = async (formData: FormData) => {
@@ -177,7 +179,11 @@ export function EditClienteDrawer({
       }
     } catch (error) {
       console.error('Error:', error);
-      alert('Error al actualizar el material del cliente');
+      toast({
+        title: "Error",
+        description: "Error al actualizar el material del cliente",
+        variant: "destructive"
+      });
     }
   };
 

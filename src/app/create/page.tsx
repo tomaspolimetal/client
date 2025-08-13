@@ -2,6 +2,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { useCachedSocketData } from "../../context/CacheProvider";
 import config from "@/config/config";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Maquina {
   nombre: string;
@@ -17,6 +18,7 @@ interface Recorte {
 }
 
 export default function Create() {
+  const { toast } = useToast();
   const { status, maquinas, socket, isConnected } = useCachedSocketData();
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   
@@ -52,11 +54,18 @@ export default function Create() {
         const newMaquina = await response.json();
         setMaquinas([...maquinas, newMaquina]);
         setMaquina({ nombre: '' ,});
-        alert('Máquina creada exitosamente');
+        toast({
+          title: "Éxito",
+          description: "Máquina creada exitosamente"
+        });
       }
     } catch (error) {
       console.error('Error creando máquina:', error);
-      alert('Error al crear la máquina');
+      toast({
+        title: "Error",
+        description: "Error al crear la máquina",
+        variant: "destructive"
+      });
     }
   };
 
@@ -87,11 +96,18 @@ export default function Create() {
           maquinaId: '',
           imagen: null
         });
-        alert('Recorte creado exitosamente');
+        toast({
+          title: "Éxito",
+          description: "Recorte creado exitosamente"
+        });
       }
     } catch (error) {
       console.error('Error creando recorte:', error);
-      alert('Error al crear el recorte');
+      toast({
+        title: "Error",
+        description: "Error al crear el recorte",
+        variant: "destructive"
+      });
     }
   };
 
