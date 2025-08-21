@@ -183,9 +183,35 @@ loadRecortes(true); // force = true
 - El sistema es retrocompatible con el código existente
 - Se puede extender fácilmente para nuevos tipos de datos
 
+## 🔧 Mejoras Implementadas (Agosto 2025)
+
+### ✅ Problemas Resueltos
+- **Reconexión automática mejorada**: Configuración robusta de Socket.IO con reintentos automáticos
+- **Sincronización tras reconexión**: Recarga automática de datos cuando se restablece la conexión
+- **Manejo de errores HTTP**: Validación de respuestas y manejo de errores de red
+- **Eventos de socket adicionales**: Soporte para `recorteDisponibleUpdated` y `forceReload`
+- **Indicador visual mejorado**: Estado de conexión y botones de reconexión manual
+- **Invalidación de caché inteligente**: Marcado de datos como no cargados en caso de error
+
+### 🚀 Nuevas Características
+- **RecortesService**: Servicio optimizado que usa los nuevos endpoints paginados
+- **Cache de segundo nivel**: Cache adicional en el servicio para consultas frecuentes
+- **Compatibilidad mejorada**: Hook `useSocketData` que mantiene la interfaz original
+- **Limpieza automática**: Limpieza periódica de cache expirado
+- **Feedback visual**: Toasts informativos para operaciones de cache
+
+### 📊 Endpoints Optimizados Utilizados
+- `/api/recortes/maquina/{id}/pendientes` - Recortes pendientes paginados
+- `/api/recortes/maquina/{id}/estado/{estado}` - Recortes por estado paginados
+- `/api/estadisticas/tiempo-real` - Estadísticas en tiempo real
+- `/api/estadisticas/maquina/{id}` - Estadísticas por máquina
+- `/api/estadisticas/resumen` - Resumen general de estadísticas
+
 ## 🔮 Futuras Mejoras
 
 - [ ] Persistencia en localStorage para datos no sensibles
 - [ ] Configuración de tiempo de caché por tipo de dato
 - [ ] Métricas de rendimiento del caché
 - [ ] Prefetching inteligente de datos relacionados
+- [ ] Compresión de datos en cache
+- [ ] Sincronización offline/online

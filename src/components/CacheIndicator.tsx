@@ -1,14 +1,16 @@
 'use client'
 import { useCache } from '@/context/CacheProvider';
+import { useSocket } from '@/context/SocketProvider';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { RefreshCw, Database, Clock } from 'lucide-react';
+import { RefreshCw, Database, Clock, Wifi, WifiOff } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from './ui/tooltip';
+import { useToast } from './ui/use-toast';
 
 interface CacheIndicatorProps {
   showDetails?: boolean;
@@ -17,6 +19,8 @@ interface CacheIndicatorProps {
 
 export function CacheIndicator({ showDetails = false, className = '' }: CacheIndicatorProps) {
   const { state, clearCache, isDataStale, loadRecortes, loadMaquinas, loadClientes } = useCache();
+  const { isConnected, forceReconnect } = useSocket();
+  const { toast } = useToast();
 
   const formatLastFetch = (timestamp: number | null) => {
     if (!timestamp) return 'Nunca';
@@ -32,6 +36,10 @@ export function CacheIndicator({ showDetails = false, className = '' }: CacheInd
   };
 
   const getCacheStatus = () => {
+    if (!isConnected) {
+      return { status: 'disconnected', color: 'red', text: 'Desconectado' };
+    }
+    
     const recortesStale = isDataStale('recortes');
     const maquinasStale = isDataStale('maquinas');
     const clientesStale = isDataStale('clientes');
@@ -44,15 +52,35 @@ export function CacheIndicator({ showDetails = false, className = '' }: CacheInd
       return { status: 'stale', color: 'orange', text: 'Datos obsoletos' };
     }
     
-    return { status: 'fresh', color: 'green', text: 'Datos actualizados' };
+    return { status: 'fresh', color: 'green', text: 'Actualizado' };
   };
 
   const handleRefreshAll = async () => {
-    await Promise.all([
-      loadRecortes(true),
-      loadMaquinas(true),
-      loadClientes(true)
-    ]);
+    try {
+      await Promise.all([
+        loadRecortes(true),
+        loadMaquinas(true),
+        loadClientes(true)
+      ]);
+      toast({
+        title: "Datos actualizados",
+        description: "El caché ha sido actualizado exitosamente.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error al actualizar",
+        description: "No se pudieron actualizar los datos. Verifica tu conexión.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleForceReconnect = () => {
+    forceReconnect();
+    toast({
+      title: "Reconectando...",
+      description: "Intentando reconectar al servidor.",
+    });
   };
 
   const cacheStatus = getCacheStatus();
@@ -64,18 +92,30 @@ export function CacheIndicator({ showDetails = false, className = '' }: CacheInd
           <TooltipTrigger asChild>
             <Badge 
               variant={cacheStatus.color === 'green' ? 'default' : 'secondary'}
-              className={`cursor-help ${className}`}
+              className={`cursor-help ${className} ${!isConnected ? 'cursor-pointer hover:bg-red-100' : ''}`}
+              onClick={!isConnected ? handleForceReconnect : undefined}
             >
-              <Database className="w-3 h-3 mr-1" />
+              {isConnected ? (
+                <Database className="w-3 h-3 mr-1" />
+              ) : (
+                <WifiOff className="w-3 h-3 mr-1" />
+              )}
               {cacheStatus.text}
             </Badge>
           </TooltipTrigger>
           <TooltipContent>
-            <div className="text-sm">
+            <div className="text-sm space-y-1">
+              <div className="flex items-center gap-2">
+                {isConnected ? <Wifi className="w-3 h-3 text-green-500" /> : <WifiOff className="w-3 h-3 text-red-500" />}
+                <span><strong>Conexión:</strong> {isConnected ? 'Conectado' : 'Desconectado'}</span>
+              </div>
               <p><strong>Estado del Caché:</strong></p>
               <p>Recortes: {state.isLoaded.recortes ? '✅' : '⏳'} {formatLastFetch(state.lastFetch.recortes)}</p>
               <p>Máquinas: {state.isLoaded.maquinas ? '✅' : '⏳'} {formatLastFetch(state.lastFetch.maquinas)}</p>
               <p>Clientes: {state.isLoaded.clientes ? '✅' : '⏳'} {formatLastFetch(state.lastFetch.clientes)}</p>
+              {!isConnected && (
+                <p className="text-xs text-red-500 mt-2">Click para reconectar</p>
+              )}
             </div>
           </TooltipContent>
         </Tooltip>
@@ -94,11 +134,23 @@ export function CacheIndicator({ showDetails = false, className = '' }: CacheInd
           </Badge>
         </div>
         <div className="flex space-x-1">
+          {!isConnected && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleForceReconnect}
+              className="h-7 px-2 text-red-600 border-red-200 hover:bg-red-50"
+            >
+              <WifiOff className="w-3 h-3 mr-1" />
+              Reconectar
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
             onClick={handleRefreshAll}
             className="h-7 px-2"
+            disabled={!isConnected}
           >
             <RefreshCw className="w-3 h-3 mr-1" />
             Actualizar

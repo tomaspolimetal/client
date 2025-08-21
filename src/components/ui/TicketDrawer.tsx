@@ -39,6 +39,7 @@ interface Recorte {
   maquinaId: string;
   Maquina?: Maquina;
   fecha_creacion: string;
+  fecha_actualizacion?: string;
   imagen?: string;
   observaciones?: string;
 }
@@ -107,9 +108,18 @@ function RecorteForm({
         <div className="grid gap-2">
           <Label>Fecha de Creación</Label>
           <p className="text-lg">
-            {new Date(selectedRecorte.fecha_creacion).toLocaleDateString()}
+            {new Date(selectedRecorte.fecha_creacion).toLocaleString()}
           </p>
         </div>
+
+        {selectedRecorte.fecha_actualizacion && (
+          <div className="grid gap-2">
+            <Label>Última actualización</Label>
+            <p className="text-lg">
+              {new Date(selectedRecorte.fecha_actualizacion).toLocaleString()}
+            </p>
+          </div>
+        )}
 
         {selectedRecorte.observaciones && (
           <div className="grid gap-2">

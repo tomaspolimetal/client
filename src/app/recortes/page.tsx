@@ -1,6 +1,6 @@
 "use client";
 import React, { Suspense } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useCachedSocketData } from "@/context/CacheProvider";
 import config from "@/config/config";
 import { getImageSrc } from "@/utils/imageUtils";
@@ -69,6 +69,16 @@ interface Recorte {
   fecha_actualizacion: string;
 }
 
+type Movement = {
+  type: 'nuevo' | 'utilizado';
+  recorteId: string;
+  date: Date;
+  largo: number;
+  ancho: number;
+  espesor: number;
+  maquinaNombre: string;
+};
+
 export default function Recortes() {  
   const router = useRouter();
   const { status, recortes, maquinas, recortesUtilizadosUltimoMes, socket, isLoaded } = useCachedSocketData();
@@ -83,6 +93,39 @@ export default function Recortes() {
   const [selectedRecorte, setSelectedRecorte] = useState<Recorte | null>(null);
   const itemsPerPage = 10;
   const isLoading = !isLoaded?.recortes || !isLoaded?.maquinas;
+  const [notiOpen, setNotiOpen] = useState(false);
+  const [lastSeenAt, setLastSeenAt] = useState<Date>(() => new Date());
+
+  // Últimos movimientos (10): nuevos y utilizados
+  const movements = useMemo<Movement[]>(() => {
+    const maquinaNombreById = new Map(maquinas.map(m => [m.id, m.nombre] as const));
+    const nuevos: Movement[] = recortes.map((r) => ({
+      type: 'nuevo',
+      recorteId: r.id,
+      date: new Date(r.fecha_creacion),
+      largo: r.largo,
+      ancho: r.ancho,
+      espesor: r.espesor,
+      maquinaNombre: maquinaNombreById.get(r.maquinaId) || '—',
+    }));
+    const utilizados: Movement[] = recortes
+      .filter((r) => !r.estado)
+      .map((r) => ({
+        type: 'utilizado',
+        recorteId: r.id,
+        date: new Date(r.fecha_actualizacion),
+        largo: r.largo,
+        ancho: r.ancho,
+        espesor: r.espesor,
+        maquinaNombre: maquinaNombreById.get(r.maquinaId) || '—',
+      }));
+    return [...nuevos, ...utilizados]
+      .sort((a, b) => b.date.getTime() - a.date.getTime())
+      .slice(0, 10);
+  }, [recortes, maquinas]);
+
+  const latestUnseen = useMemo(() => movements.find((m) => m.date > lastSeenAt), [movements, lastSeenAt]);
+  const notificationDotColor = latestUnseen ? (latestUnseen.type === 'nuevo' ? 'bg-green-500' : 'bg-red-500') : null;
 
   // Establecer la pestaña activa cuando se cargan las máquinas
   useEffect(() => {
@@ -231,10 +274,48 @@ export default function Recortes() {
             </div>
             <div className="ml-auto flex items-center gap-2">
               <CacheIndicator />
-              <Button variant="ghost" size="icon">
-                <Bell className="h-4 w-4" />
-                <span className="sr-only">Notificaciones</span>
-              </Button>
+              {/* Notificaciones */}
+              <DropdownMenu open={notiOpen} onOpenChange={(open) => { setNotiOpen(open); if (open) setLastSeenAt(new Date()); }}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-4 w-4" />
+                    {notificationDotColor && (
+                      <span className={`absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ${notificationDotColor}`} />
+                    )}
+                    <span className="sr-only">Notificaciones</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-96">
+                  <DropdownMenuLabel>Últimos movimientos</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {(() => {
+                    const movimientos = movements;
+                    if (movimientos.length === 0) {
+                      return (
+                        <div className="px-2 py-4 text-sm text-muted-foreground">Sin movimientos recientes</div>
+                      );
+                    }
+                    return movimientos.map((m: Movement) => (
+                      <DropdownMenuItem key={`${m.type}-${m.recorteId}-${m.date.toISOString()}`} className="flex items-start gap-2 py-2">
+                        <span
+                          className={`mt-1 inline-block h-2 w-2 rounded-full ${m.type === 'nuevo' ? 'bg-green-500' : 'bg-red-500'}`}
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">
+                            {m.type === 'nuevo' ? 'Nuevo recorte' : 'Recorte utilizado'}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {m.largo} × {m.ancho} × {m.espesor} mm • {m.maquinaNombre}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {m.date.toLocaleString()}
+                          </span>
+                        </div>
+                      </DropdownMenuItem>
+                    ));
+                  })()}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
